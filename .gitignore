@@ -1,0 +1,13 @@
+# Maven
+target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Secrets
+.env
+
+# Claude local settings
+.claude/settings.local.json

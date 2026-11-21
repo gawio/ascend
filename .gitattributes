@@ -1,0 +1,6 @@
+# Shell scripts use LF, Windows scripts CRLF
+*.sh   text eol=lf
+*.bat  text eol=crlf
+
+# Binary files should be left untouched
+*.jar  binary

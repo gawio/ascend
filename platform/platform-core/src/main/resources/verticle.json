@@ -1,0 +1,14 @@
+[
+  {
+    "name": "http",
+    "address": "dev.gawio.payhub.hub.api.HttpServerVerticle",
+    "instances": 2,
+    "isDeploy": true
+  },
+  {
+    "name": "confirm",
+    "address": "dev.gawio.payhub.hub.flow.ConfirmPaymentVerticle",
+    "instances": 1,
+    "isDeploy": true
+  }
+]

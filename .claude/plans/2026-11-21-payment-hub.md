@@ -144,13 +144,15 @@ Activity diagram: Launcher đọc profile → load config → tạo Injector →
 
 **Files:**
 - Create: `platform/platform-core/.../ConfigLoader.java`, `VerticleDescriptor.java`, `MainVerticle.java`, `Launcher.java`
-- Test: `platform/platform-core/src/test/java/dev/gawio/platform/core/MainVerticleTest.java`, `ConfigLoaderTest.java`, test fixtures `HelloVerticle`, `BrokenVerticle`, `src/test/resources/app-test.json`, `verticle-test.json`
+- Test: `platform/platform-core/src/test/java/dev/gawio/platform/core/MainVerticleTest.java`, `ConfigLoaderTest.java`, test fixtures `HelloVerticle`, `BrokenVerticle`, `src/test/resources/app-test.json`
 
 **Interfaces:**
 - Produces:
   - `ConfigLoader.load(Vertx vertx, String profile): Future<JsonObject>` — đọc `app-<profile>.json` từ classpath (executeBlocking hoặc `vertx.fileSystem()`); không có file → Future fail `"Config not found: app-<profile>.json"`.
   - `record VerticleDescriptor(String name, String address, int instances, boolean isDeploy)`; `static List<VerticleDescriptor> parse(JsonArray)`. `address` = tên class đầy đủ.
   - `MainVerticle(Injector injector, List<VerticleDescriptor> verticles) extends VerticleBase` — `start()` deploy tuần tự bằng `vertx.deployVerticle(() -> (Deployable) injector.getInstance(clazz), new DeploymentOptions().setInstances(n).setConfig(config()))`, log `"deploy {name} success"`; fail → trả Future fail (không deploy tiếp).
+  - Log dùng `System.Logger` của JDK (không thêm thư viện).
+  - `Launcher.launch(String[] args, Function<JsonObject, List<Module>> modules): void` — gọi `run`; thành công → thêm shutdown hook `vertx.close().await()`; thất bại → log + `System.exit(1)`.
   - `Launcher.run(String[] args, Function<JsonObject, List<Module>> modules): Future<Vertx>` — profile từ env `APP_PROFILE` mặc định `local`; đăng ký `AppDataCodec` (Task 2 thêm vào); bind `Vertx` + `JsonObject` config (`@Named("config")`) vào Guice; đọc `verticle.json` từ classpath; deploy fail → log + `vertx.close()` + `System.exit(1)` (chỉ ở `main`, không trong `run`). Thêm shutdown hook gọi `vertx.close()`.
 
 - [ ] **Step 1: Viết test (fail)**
@@ -165,13 +167,14 @@ Activity diagram: Launcher đọc profile → load config → tạo Injector →
       ctx.completeNow(); })));
 }
 @Test void failsFastWhenAVerticleFails(...)  // [Broken(isDeploy=true), Hello] → deploy fail, HelloVerticle.STARTED == 0
+@Test void runsOneObjectPerInstance(...)      // Hello instances=3 → STARTED == 3
 @Test void loadsProfileConfig(...)            // ConfigLoader.load(vertx,"test") → json.getString("name") == "payhub-test"
 @Test void missingProfileFails(...)           // load(vertx,"nope") → failed, message chứa "app-nope.json"
 ```
 
 - [ ] **Step 2:** `mvn -pl platform/platform-core test` → FAIL (class chưa có).
 - [ ] **Step 3:** Cài đặt các class theo Interfaces.
-- [ ] **Step 4:** `mvn -pl platform/platform-core test` → PASS 4 test.
+- [ ] **Step 4:** `mvn -pl platform/platform-core test` → PASS 5 test.
 - [ ] **Step 5: Commit** `feat(core): launcher, MainVerticle, verticle.json, profile config`
 
 ---
